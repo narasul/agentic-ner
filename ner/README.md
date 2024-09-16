@@ -1,13 +1,28 @@
 # ner
 
+[![PyPI](https://img.shields.io/pypi/v/ner?style=flat-square)](https://pypi.python.org/pypi/ner/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ner?style=flat-square)](https://pypi.python.org/pypi/ner/)
+[![PyPI - License](https://img.shields.io/pypi/l/ner?style=flat-square)](https://pypi.python.org/pypi/ner/)
+[![Coookiecutter - Wolt](https://img.shields.io/badge/cookiecutter-Wolt-00c2e8?style=flat-square&logo=cookiecutter&logoColor=D4AA00&link=https://github.com/woltapp/wolt-python-package-cookiecutter)](https://github.com/woltapp/wolt-python-package-cookiecutter)
+
+
+---
+
 **Documentation**: [https://narasul.github.io/ner](https://narasul.github.io/ner)
 
 **Source Code**: [https://github.com/narasul/ner](https://github.com/narasul/ner)
+
+**PyPI**: [https://pypi.org/project/ner/](https://pypi.org/project/ner/)
 
 ---
 
 Rasul's master's thesis
 
+## Installation
+
+```sh
+pip install ner
+```
 
 ## Development
 
@@ -70,3 +85,7 @@ Or if you want e.g. want to run all checks manually for all files:
 ```sh
 pre-commit run --all-files
 ```
+
+---
+
+This project was generated using the [wolt-python-package-cookiecutter](https://github.com/woltapp/wolt-python-package-cookiecutter) template.
