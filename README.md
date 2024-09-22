@@ -1,8 +1,8 @@
 # ner
 
-**Documentation**: [https://narasul.github.io/ner](https://narasul.github.io/ner)
+**Documentation**: [https://narasul.github.io/thesis](https://narasul.github.io/thesis)
 
-**Source Code**: [https://github.com/narasul/ner](https://github.com/narasul/ner)
+**Source Code**: [https://github.com/narasul/thesis](https://github.com/narasul/thesis)
 
 ---
 

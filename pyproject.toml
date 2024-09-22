@@ -8,9 +8,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-documentation = "https://narasul.github.io/ner"
-homepage = "https://narasul.github.io/ner"
-repository = "https://github.com/narasul/ner"
+documentation = "https://narasul.github.io/thesis"
+homepage = "https://narasul.github.io/thesis"
+repository = "https://github.com/narasul/thesis"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -33,6 +33,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8.1, <4.0"
+openai = "==0.28.1"
+pydantic = "*"
 
 [tool.poetry.group.dev.dependencies]
 mkdocstrings = {version = ">=0.23", extras = ["python"]}
