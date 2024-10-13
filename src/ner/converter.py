@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -16,9 +17,25 @@ class Converter:
 
             tags[start] = f"B-{tag}"
             for i in range(start + 1, end):
-                tags[i] = f"I-{tag}"
+                if not tags[i].startswith("B-"):
+                    tags[i] = f"I-{tag}"
 
         return tags
+
+    @staticmethod
+    def convert_genia_to_example(
+        entities: List[Dict[str, Any]], tokens: List[str]
+    ) -> str:
+        tokens_ = copy.deepcopy(tokens)
+        for entity in entities:
+            start_pos = entity["start"]
+            end_pos = entity["end"] - 1
+            entity_type = entity["type"]
+
+            tokens_[start_pos] = f"<{entity_type}>{tokens_[start_pos]}"
+            tokens_[end_pos] = f"{tokens_[end_pos]}</{entity_type}>"
+
+        return " ".join(tokens_)
 
 
 if __name__ == "__main__":
@@ -66,3 +83,6 @@ if __name__ == "__main__":
     print(f"IOB2: {Converter.convert_genia_to_iob2(sample_entities, sample_tokens)}")
     print(f"Tokens: {sample_tokens}")
     print(f"Entities: {sample_entities}")
+    print(
+        f"Example: {Converter.convert_genia_to_example(sample_entities, sample_tokens)}"
+    )

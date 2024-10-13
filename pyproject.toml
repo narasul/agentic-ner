@@ -38,6 +38,7 @@ pydantic = "*"
 anthropic = "*"
 seqeval = "1.2.2"
 numpy = "2.1.1"
+gripql = "0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 mkdocstrings = {version = ">=0.23", extras = ["python"]}

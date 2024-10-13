@@ -29,16 +29,18 @@ def get_predictions(
     subset = test_data[:subset_size]
     predictions = []
     for data in subset:
+        print(f"Truth     : {Converter.convert_genia_to_example(data["entities"], data["tokens"])}")
         predictions.append(ner_master.recognize(data["tokens"]))
 
     return predictions
 
 
 if __name__ == "__main__":
-    subset_size = 500
-    test_data, references = load_references("data/genia_test.json")
+    test_data, references = load_references("data/genia_train_dev.json")
     print(f"Loaded references. Sample reference: {references[0]}")
 
+    subset_size = len(references)
+    subset_size = 60
     predictions = get_predictions(
         NERMaster(AnthropicClient(ClaudeFamily.SONNET_35)), test_data, subset_size
     )
@@ -47,16 +49,19 @@ if __name__ == "__main__":
     print("\n\nEval result:")
     run_eval(references[:subset_size], predictions)
 
-#            Sample eval results with subset_size of 10
+    with open("data/pred.json", "w") as file:
+        file.write(json.dumps(predictions))
+
+#            Sample eval results with subset_size of 600
 #
 #               precision    recall  f1-score   support
 #
-#          DNA       0.62      0.61      0.61        38
-#          RNA       0.50      0.50      0.50         2
+#          DNA       0.41      0.55      0.47       387
+#          RNA       0.41      0.41      0.41        41
 #    cell_line       0.00      0.00      0.00         0
-#    cell_type       0.83      0.18      0.29        57
-#      protein       0.41      0.68      0.51        47
+#    cell_type       0.58      0.38      0.46       269
+#      protein       0.53      0.46      0.50       841
 #
-#    micro avg       0.44      0.46      0.45       144
-#    macro avg       0.47      0.39      0.38       144
-# weighted avg       0.63      0.46      0.45       144
+#    micro avg       0.44      0.47      0.46      1538
+#    macro avg       0.39      0.36      0.37      1538
+# weighted avg       0.51      0.47      0.48      1538
