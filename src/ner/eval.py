@@ -5,11 +5,27 @@ from seqeval.scheme import IOB2
 
 from ner.clients.claude_client import AnthropicClient, ClaudeFamily
 from ner.converter import Converter
-from ner.few_shot import NERMaster
+from ner.tagger import Tagger
+from ner.tagger_few_shot import FewShotTagger
 
 
-def run_eval(predictions: List[List[str]], references: List[List[str]]):
+def run_eval(tagger: Tagger):
+    test_data, references = load_references("data/genia_train_dev.json")
+    print(f"Loaded references. Sample reference: {references[0]}")
+
+    subset_size = len(references)
+    subset_size = 60
+    predictions = get_predictions(
+        tagger, test_data, subset_size
+    )
+    print(f"Loaded predictions. Sample prediction: {predictions[0]}")
+
+    print("\n\nEval result:")
     print(classification_report(references, predictions, scheme=IOB2))
+
+    with open("data/pred.json", "w") as file:
+        file.write(json.dumps(predictions))
+
 
 
 def load_references(path: str) -> Tuple[Any, Any]:
@@ -23,34 +39,21 @@ def load_references(path: str) -> Tuple[Any, Any]:
 
 
 def get_predictions(
-    ner_master: NERMaster, test_data: List[Dict[str, Any]], subset_size: int
+    tagger: Tagger, test_data: List[Dict[str, Any]], subset_size: int
 ):
     print(f"Length of test data: {len(test_data)}. Taking subset of {subset_size}")
     subset = test_data[:subset_size]
     predictions = []
     for data in subset:
         print(f"Truth     : {Converter.convert_genia_to_example(data["entities"], data["tokens"])}")
-        predictions.append(ner_master.recognize(data["tokens"]))
+        predictions.append(tagger.recognize(data["tokens"]))
 
     return predictions
 
 
 if __name__ == "__main__":
-    test_data, references = load_references("data/genia_train_dev.json")
-    print(f"Loaded references. Sample reference: {references[0]}")
-
-    subset_size = len(references)
-    subset_size = 60
-    predictions = get_predictions(
-        NERMaster(AnthropicClient(ClaudeFamily.SONNET_35)), test_data, subset_size
-    )
-    print(f"Loaded predictions. Sample prediction: {predictions[0]}")
-
-    print("\n\nEval result:")
-    run_eval(references[:subset_size], predictions)
-
-    with open("data/pred.json", "w") as file:
-        file.write(json.dumps(predictions))
+    tagger = FewShotTagger(AnthropicClient(ClaudeFamily.SONNET_35))
+    run_eval(tagger)
 
 #            Sample eval results with subset_size of 600
 #
