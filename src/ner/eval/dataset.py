@@ -1,6 +1,5 @@
 import copy
 import random
-import json
 import numpy as np
 
 from typing import List, Any, Dict

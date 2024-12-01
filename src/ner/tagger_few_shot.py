@@ -2,6 +2,7 @@ import json
 from typing import List, Tuple
 from dataclasses import dataclass
 from ner.clients.claude_client import AnthropicClient, ClaudeFamily
+from ner.clients.llm_client import LLMClient
 from ner.converter import Converter
 from ner.prompts import SYSTEM_PROMPT_FOR_XML_OUTPUT, get_system_prompt_with_feedback
 from ner.tagger import Tagger
@@ -10,6 +11,7 @@ from ner.tagger import Tagger
 @dataclass
 class FewShotTagger(Tagger):
     system_prompt: str
+    llm_client: LLMClient
 
     def recognize(self, tokens: List[str], left_context: str = "", right_context: str = "") -> Tuple[str, List[str]]:
         query_template = "{}\n\n<text_to_tag>{}</text_to_tag>\n\n{}\n\nOnly tag this text: <text_to_tag>{}</text_to_tag>"
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     
     entity_types = ["DNA", "RNA", "protein", "cell_type", "cell_line"]
 
-    ner_master = FewShotTagger(AnthropicClient(ClaudeFamily.SONNET_35), entity_types, SYSTEM_PROMPT_FOR_XML_OUTPUT)
+    ner_master = FewShotTagger(entity_types, SYSTEM_PROMPT_FOR_XML_OUTPUT, AnthropicClient(ClaudeFamily.SONNET_35))
     subset = raw_references[:5]
     for reference in subset:
         print(f"Reference entities: {reference["entities"]}")

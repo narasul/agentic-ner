@@ -1,10 +1,10 @@
 import asyncio
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import uuid
 
 from autogen_core.base import TopicId
-from autogen_core.components.models import UserMessage
+from autogen_core.components.models import ChatCompletionClient, UserMessage
 
 from autogen_core.application import SingleThreadedAgentRuntime
 from autogen_core.components import TypeSubscription
@@ -15,15 +15,16 @@ from ner.agents.reviewer_agent import REVIEWER_TOPIC_TYPE, ReviewerAgent
 from ner.agents.research_agent import RESEARCHER_TOPIC_TYPE, ResearchAgent
 from ner.agents.chat_supervisor import ChatSupervisor
 from ner.agents.agent_config import AgentConfig
-from ner.clients.claude_client import ClaudeFamily
-from ner.clients.claude_oai_compatible_client import create_chat_completions_client
 from ner.converter import Converter
+from ner.grounding import GroundingEngine
 from ner.tagger import Tagger
 
 
 @dataclass
 class MultiAgentTagger(Tagger):
     agent_config: AgentConfig
+    llm_client: ChatCompletionClient
+    grounding_engine: Optional[GroundingEngine] = None
     group_chat_topic_type = "GroupChat"
 
     async def initialize_agents(self) -> SingleThreadedAgentRuntime:
@@ -39,9 +40,7 @@ class MultiAgentTagger(Tagger):
             lambda: TaggerAgent(
                 description=self.agent_config.tagger_description,
                 group_chat_topic_type=self.group_chat_topic_type,
-                model_client=create_chat_completions_client(
-                    ClaudeFamily.HAIKU_35.value
-                ),
+                model_client=self.llm_client,
                 system_prompt=self.agent_config.tagger_system_prompt,
             ),
         )
@@ -62,9 +61,7 @@ class MultiAgentTagger(Tagger):
             lambda: ReviewerAgent(
                 description=self.agent_config.reviewer_description,
                 group_chat_topic_type=self.group_chat_topic_type,
-                model_client=create_chat_completions_client(
-                    ClaudeFamily.HAIKU_35.value
-                ),
+                model_client=self.llm_client,
                 system_prompt=self.agent_config.reviewer_system_prompt,
             ),
         )
@@ -86,9 +83,7 @@ class MultiAgentTagger(Tagger):
             lambda: ResearchAgent(
                 description=self.agent_config.researcher_description,
                 group_chat_topic_type=self.group_chat_topic_type,
-                model_client=create_chat_completions_client(
-                    ClaudeFamily.HAIKU_35.value
-                ),
+                model_client=self.llm_client,
                 system_prompt=self.agent_config.researcher_system_prompt,
             ),
         )
@@ -115,15 +110,14 @@ class MultiAgentTagger(Tagger):
                     reviewer_topic_type,
                     research_topic_type,
                 ],
-                model_client=create_chat_completions_client(
-                    ClaudeFamily.HAIKU_35.value
-                ),
+                model_client=self.llm_client,
                 participant_descriptions=[
                     self.agent_config.tagger_description,
                     self.agent_config.reviewer_description,
                     self.agent_config.researcher_description,
                 ],
                 metadata=self.metadata,
+                grounding_engine=self.grounding_engine,
             ),
         )
 
@@ -148,6 +142,12 @@ class MultiAgentTagger(Tagger):
         self.metadata["query"] = (
             f"Remember, you need to tag the following:\n <text_to_tag>{' '.join(tokens)}</text_to_tag>"
         )
+        self.metadata["tokens"] = tokens
+        self.metadata["entity_types"] = self.entity_types
+        self.metadata["convert_to_genia_labels"] = (
+            MultiAgentTagger.convert_to_genia_labels
+        )
+
         print(f"Starting the chat with following query: {query}")
         self.runtime.start()
         session_id = str(uuid.uuid4())

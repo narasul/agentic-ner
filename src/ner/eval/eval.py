@@ -21,7 +21,7 @@ def get_predictions(tagger: Tagger, test_data: NERDataset) -> List[List[str]]:
             )
             print(f"Tagged    : {tagged_string}")
             predictions.append(iob2_tags)
-            sleep(5)
+            sleep(2)
     except Exception as err:
         print(
             f"Something wrong happened: {str(err)}. Returning predictions gathered so far."

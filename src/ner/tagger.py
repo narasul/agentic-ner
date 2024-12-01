@@ -2,13 +2,11 @@ from nltk import word_tokenize
 from dataclasses import dataclass
 from typing import List, Any, Dict, Tuple
 from abc import ABC, abstractmethod
-from ner.clients.llm_client import LLMClient
 from ner.helper import extract_tag
 
 
 @dataclass
 class Tagger(ABC):
-    llm_client: LLMClient
     entity_types: List[str]
 
     @abstractmethod

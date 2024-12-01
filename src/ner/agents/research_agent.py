@@ -49,7 +49,7 @@ class ResearchAgent(BaseGroupChatAgent):
         completion = await self._model_client.create(
             [self._system_message] + self._chat_history,
             tools=[self._search_tool],
-            extra_create_args={"tool_choice": "required"},
+            extra_create_args={"tool_choice": "required", "temperature": 0},
             cancellation_token=ctx.cancellation_token,
         )
 
@@ -70,7 +70,8 @@ class ResearchAgent(BaseGroupChatAgent):
         )
         chat_history_copy = copy.deepcopy(self._chat_history[-3:])
         completion = await self._model_client.create(
-            [self._system_message] + chat_history_copy
+            [self._system_message] + chat_history_copy,
+            extra_create_args={"temperature": 0},
         )
         print(f"Search tool response: {search_tool_response}")
         await self.publish_message(

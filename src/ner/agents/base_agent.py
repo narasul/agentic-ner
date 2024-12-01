@@ -65,7 +65,8 @@ class BaseGroupChatAgent(RoutedAgent):
         #     )
         # )
         completion = await self._model_client.create(
-            [self._system_message] + self._chat_history
+            [self._system_message] + self._chat_history,
+            extra_create_args={"temperature": 0},
         )
         assert isinstance(completion.content, str)
         self._chat_history.append(

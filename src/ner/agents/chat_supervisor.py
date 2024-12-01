@@ -1,4 +1,5 @@
-from typing import List, Any, Dict
+from copy import copy, deepcopy
+from typing import List, Any, Dict, Optional
 
 from autogen_core.base import MessageContext
 from autogen_core.components import (
@@ -14,6 +15,8 @@ from ner.agents.base_agent import GroupChatMessage, RequestToSpeak
 from ner.agents.research_agent import RESEARCHER_TOPIC_TYPE
 from ner.agents.reviewer_agent import REVIEWER_TOPIC_TYPE
 from ner.agents.tagger_agent import TAGGER_TOPIC_TYPE
+from ner.converter import Converter
+from ner.grounding import GroundingEngine
 
 
 MAX_AGENT_TURNS = 10
@@ -26,6 +29,7 @@ class ChatSupervisor(RoutedAgent):
         model_client: ChatCompletionClient,
         participant_descriptions: List[str],
         metadata: Dict[str, Any],
+        grounding_engine: Optional[GroundingEngine] = None,
     ) -> None:
         super().__init__("Group chat manager")
         self._participant_topic_types = participant_topic_types
@@ -35,6 +39,8 @@ class ChatSupervisor(RoutedAgent):
         self._previous_participant_topic_type: str | None = None
         self._metadata = metadata
         self._num_agent_turns = 0
+        self._grounding_engine = grounding_engine
+        self._output_grounded = False
 
     @message_handler
     async def handle_message(
@@ -77,13 +83,43 @@ class ChatSupervisor(RoutedAgent):
                     content=self._metadata.get("query", ""),
                 )
             )
-        elif message.body.content.endswith("APPROVED"):
+        elif "APPROVED!" in message.body.content:
+            if not self._grounding_engine:
+                print(f"No grounding engine provided so ending the conversation")
+                return
+            await self.ground_output(self._metadata["last_tagger_output"])
             return
 
         await self.publish_message(
             RequestToSpeak(), DefaultTopicId(type=selected_topic_type)
         )
         self._previous_participant_topic_type = selected_topic_type
+
+    async def ground_output(self, llm_output: str):
+        self._output_grounded = True
+        tokens = self._metadata.get("tokens", [])
+        entity_types = self._metadata.get("entity_types", [])
+        genia_converter = self._metadata.get(
+            "convert_to_genia_labels", lambda x, y, z: None
+        )
+
+        copy_tokens = deepcopy(tokens)
+        _, genia_labels = genia_converter(llm_output, copy_tokens, entity_types)  # type: ignore
+        iob2_labels = Converter.convert_genia_to_iob2(genia_labels, tokens)
+
+        grounding_feedback = self._grounding_engine.verify(tokens, iob2_labels).get_text_feedback()  # type: ignore
+        print(f"Providing grounding feedback to agent: {grounding_feedback}")
+        if grounding_feedback.strip():
+            self._chat_history.append(
+                UserMessage(
+                    source="User",
+                    content=f"<grounding_feedback>\n{grounding_feedback}\n</grounding_feedback>",
+                )
+            )
+            self._previous_participant_topic_type = TAGGER_TOPIC_TYPE
+            await self.publish_message(
+                RequestToSpeak(), DefaultTopicId(type=TAGGER_TOPIC_TYPE)
+            )
 
     async def handle_researcher_message(self, message: GroupChatMessage):
         print(
@@ -103,6 +139,11 @@ class ChatSupervisor(RoutedAgent):
     async def handle_tagger_message(self, message: GroupChatMessage):
         selected_topic_type = ""
         print(f"Handling tagger message. Content: {message.body.content}")
+
+        if "<output>" in message.body.content and self._output_grounded:
+            print(f"Tagger agent updated output based on grounding")
+            self._metadata["last_tagger_output"] = message.body.content  # type: ignore
+            return
         if "<output>" in message.body.content or "<objection>" in message.body.content:
             selected_topic_type = REVIEWER_TOPIC_TYPE
             print(f"Updating tagger output: {message.body.content}")
@@ -122,6 +163,9 @@ class ChatSupervisor(RoutedAgent):
                     content="You should put your final output inside <output> tags!",
                 )
             )
+
+        if self._output_grounded:
+            return
 
         self._previous_participant_topic_type = selected_topic_type
 
