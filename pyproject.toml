@@ -33,12 +33,21 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.12.0, <4.0"
-openai = "==0.28.1"
+openai = ">=0.28.1"
 pydantic = "*"
 anthropic = "*"
 seqeval = "1.2.2"
-numpy = "2.1.1"
+numpy = "*"
 gripql = "0.7.0"
+autogen-agentchat = "0.4.0.dev6"
+autogen-ext = {extras = ["openai"], version = "0.4.0.dev6"}
+litellm = {extras = ["proxy"], version = "*"}
+datasets = "*"
+tqdm = "*"
+rich = "*"
+nltk = "*"
+langchain_community = "*"
+tavily-python = "*"
 
 [tool.poetry.group.dev.dependencies]
 mkdocstrings = {version = ">=0.23", extras = ["python"]}
@@ -51,6 +60,7 @@ pytest-github-actions-annotate-failures = "*"
 pytest-cov = "*"
 python-kacl = "*"
 ruff = ">=0.2.0"
+pylsp-rope = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
