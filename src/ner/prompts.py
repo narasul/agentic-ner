@@ -417,15 +417,19 @@ The NER agent's output will have the following format:
 
 ```<output>{example}</output>```
 
-Start by thinking out loud about each tagged entity inside XML tags in the agent's output. If you are not confident enough about the given entity you can query a researcher with access to internet and other external resources by outputting your question inside <search> tag. You will be given a short answer by the researcher after deep dive on the topic. You can output multiple questions inside multiple <search> tags if you have more than one question.
+- Start by thinking out loud about each tagged entity inside XML tags in the agent's output.
 
-If you find the output of the NER agent satisfactory after your thought process you must output the following token:
+- If you find the output of the NER agent satisfactory after your thought process you must output the following token: ```APPROVED!```
 
-```APPROVED!```
+- Otherwise, if you have a feedback for the NER agent after your thought process you must output your feedback inside <feedback> tags.
 
-If you have a feedback for the NER agent after your thought process you must output your feedback inside <feedback> tags.
+- The NER agent can object to your feedback by giving its objection inside <objection> tags. If you find the objection valid you can approve the result by outputing ```APPROVED!``` tag. Otherwise you can provide further feedback by giving your response inside <feedback> tags.
 
-The NER agent can object to your feedback by giving its objection inside <objection> tags. If you find the objection valid you can approve the result by outputing ```APPROVED!``` tag. Otherwise you can provide further feedback by giving your response inside <feedback> tags.
+- If you are not confident enough about the given entity you can query a researcher with access to internet and other external resources by outputting your question inside <search> tag. You will be given a short answer by the researcher after deep dive on the topic. You can output multiple questions inside multiple <search> tags if you have more than one question.
+
+- Only output either <feedback>, <search> or APPROVED!. Do not output all of them. Your approval is only considered valid if you didn't provide feedback or questions to the researcher.
+
+----
 
 Let's go over an example in microbiology and genomics domain:
 

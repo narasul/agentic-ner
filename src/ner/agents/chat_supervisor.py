@@ -30,6 +30,7 @@ class ChatSupervisor(RoutedAgent):
         participant_descriptions: List[str],
         metadata: Dict[str, Any],
         grounding_engine: Optional[GroundingEngine] = None,
+        researcher: bool = True,
     ) -> None:
         super().__init__("Group chat manager")
         self._participant_topic_types = participant_topic_types
@@ -40,6 +41,7 @@ class ChatSupervisor(RoutedAgent):
         self._metadata = metadata
         self._num_agent_turns = 0
         self._grounding_engine = grounding_engine
+        self._researcher = researcher
         self._output_grounded = False
 
     @message_handler
@@ -113,7 +115,7 @@ class ChatSupervisor(RoutedAgent):
             self._chat_history.append(
                 UserMessage(
                     source="User",
-                    content=f"<grounding_feedback>\n{grounding_feedback}\n</grounding_feedback>",
+                    content=f"\nPlease consider the following feedback from grounding engine as well:\n\n<grounding_feedback>\n{grounding_feedback}\n</grounding_feedback>",
                 )
             )
             self._previous_participant_topic_type = TAGGER_TOPIC_TYPE

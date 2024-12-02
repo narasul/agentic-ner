@@ -25,6 +25,8 @@ class MultiAgentTagger(Tagger):
     agent_config: AgentConfig
     llm_client: ChatCompletionClient
     grounding_engine: Optional[GroundingEngine] = None
+    internet_access: bool = True
+    researcher: bool = True
     group_chat_topic_type = "GroupChat"
 
     async def initialize_agents(self) -> SingleThreadedAgentRuntime:
@@ -85,6 +87,8 @@ class MultiAgentTagger(Tagger):
                 group_chat_topic_type=self.group_chat_topic_type,
                 model_client=self.llm_client,
                 system_prompt=self.agent_config.researcher_system_prompt,
+                internet_access=self.internet_access,
+                enabled=self.researcher,
             ),
         )
 

@@ -48,5 +48,5 @@ def run_eval(
         )
     )
 
-    with open(f"data/{output_file}-{datetime.now().isoformat()}.json", "w") as file:
+    with open(f"pred/{output_file}-{datetime.now().isoformat()}.json", "w") as file:
         file.write(json.dumps(predictions))

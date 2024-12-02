@@ -1,4 +1,5 @@
 import copy
+import json
 import random
 import numpy as np
 
@@ -9,6 +10,7 @@ from pydantic import BaseModel, Field
 
 
 from ner.converter import Converter
+from ner.tagger import Tagger
 
 
 SAMPLING_SEED = 43
@@ -151,12 +153,111 @@ class NERDataset(BaseModel):
         )
 
     @staticmethod
-    def from_astroner(split: str, sample_size: int = -1) -> "NERDataset":
-        pass
+    def from_astroner(path: str) -> "NERDataset":
+        all_tokens = []
+        all_labels = []
+
+        with open(path, "r") as file:
+            data = json.loads(file.read())
+
+        entities = set()
+        for raw_entry in data:
+            title = raw_entry["title"]
+            tokens = word_tokenize(title)
+            for annotation in raw_entry["annotations"]:
+                entities.add(annotation["label"])
+
+        for raw_entry in data:
+            title = raw_entry["title"]
+            tokens = word_tokenize(title)
+            for annotation in raw_entry["annotations"]:
+                label = annotation["label"]
+                part_of_text = annotation["text"]
+
+                part_of_text_with_label = f"<{label}>{part_of_text}</{label}>"
+                title = title.replace(part_of_text, part_of_text_with_label)
+
+            copy_tokens = copy.deepcopy(tokens)
+            _, genia_labels = Tagger.convert_to_genia_labels(
+                f"<output>{title}</output>", copy_tokens, list(entities)
+            )
+
+            iob2_labels = Converter.convert_genia_to_iob2(genia_labels, tokens)
+            all_labels.append(iob2_labels)
+            all_tokens.append(tokens)
+
+        entries = []
+        for i, tokens in enumerate(all_tokens):
+            entries.append(
+                NERDatasetEntry(
+                    left_context="",
+                    right_context="",
+                    tokens=tokens,
+                    labels=all_labels[i],
+                    text=" ".join(tokens),
+                )
+            )
+
+        references = copy.deepcopy(all_labels)
+
+        # shuffle the data
+        np.random.seed(SAMPLING_SEED)
+        indices = np.random.permutation(len(entries))
+        references = [references[i] for i in indices]
+        entries = [entries[i] for i in indices]
+
+        return NERDataset(
+            entries=entries, entity_types=list(entities), references=references
+        )
 
     @staticmethod
-    def from_musicner(split: str, sample_size: int = -1) -> "NERDataset":
-        pass
+    def from_musicner(path: str) -> "NERDataset":
+        all_tokens = []
+        all_labels = []
+        with open(path, "r") as file:
+            sentences = file.read().split("\n\n")
+            for sentence in sentences:
+                tokens = []
+                labels = []
+                raw_tokens = sentence.split("\n")
+                for raw_token in raw_tokens:
+                    parts = raw_token.split()
+                    if len(parts) == 2:
+                        tokens.append(parts[0].strip())
+                        labels.append(parts[1].strip())
+
+                all_tokens.append(tokens)
+                all_labels.append(labels)
+
+        entries = []
+        for i, tokens in enumerate(all_tokens):
+            entries.append(
+                NERDatasetEntry(
+                    left_context="",
+                    right_context="",
+                    tokens=tokens,
+                    labels=all_labels[i],
+                    text=" ".join(tokens),
+                )
+            )
+
+        entities = set()
+        for entry in entries:
+            for label in entry.labels:
+                if label != "O":
+                    entities.add(label[2:])
+
+        references = copy.deepcopy(all_labels)
+
+        # shuffle the data
+        np.random.seed(SAMPLING_SEED)
+        indices = np.random.permutation(len(entries))
+        references = [references[i] for i in indices]
+        entries = [entries[i] for i in indices]
+
+        return NERDataset(
+            entries=entries, entity_types=list(entities), references=references
+        )
 
     @staticmethod
     def _from_buster_to_ner_entry(

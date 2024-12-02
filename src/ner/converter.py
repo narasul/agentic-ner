@@ -41,24 +41,30 @@ class Converter:
     @staticmethod
     def convert_iob2_to_example(labels: List[str], tokens: List[str]) -> str:
         tokens_ = copy.deepcopy(tokens)
-        prev_token_in_entity = False
-        entity = None
+        entity_stack = []
+
         for i in range(len(tokens)):
             label = labels[i]
-            if label.startswith("B"):
-                entity = label[2:]
-                tokens_[i] = f"<{entity}>{tokens[i]}"
-                prev_token_in_entity = True
-            elif label.startswith("I"):
-                prev_token_in_entity = True
-            else:
-                if prev_token_in_entity and i != 0 and entity:
-                    tokens_[i] = f"{tokens[i - 1]}</{entity}>"
 
-                prev_token_in_entity = False
+            # Close entities that are no longer active
+            while (
+                entity_stack
+                and not label.startswith(f"I-{entity_stack[-1]}")
+                and not label.startswith(f"B-{entity_stack[-1]}")
+            ):
+                tokens_[i - 1] += f"</{entity_stack.pop()}>"
 
-        if prev_token_in_entity and entity:
-            tokens_[-1] = f"{tokens[-1]}</{entity}>"
+            # Start a new entity
+            if label.startswith("B-"):
+                current_entity = label[2:]
+                tokens_[i] = (
+                    f"{''.join(f'<{e}>' for e in entity_stack)}<{current_entity}>{tokens[i]}"
+                )
+                entity_stack.append(current_entity)
+
+        # Close remaining entities at the end
+        while entity_stack:
+            tokens_[-1] += f"</{entity_stack.pop()}>"
 
         return " ".join(tokens_)
 
