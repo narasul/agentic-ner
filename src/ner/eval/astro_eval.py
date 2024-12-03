@@ -192,6 +192,26 @@ def run_multi_agent_eval(
     #        macro avg       0.27      0.30      0.25      1192
     #     weighted avg       0.34      0.31      0.31      1192
 
+    # Eval result, with grounding, without researcher, Haiku 3.5:
+    #                   precision    recall  f1-score   support
+    #
+    #       AstrObject       0.14      0.64      0.23        14
+    #     AstroPortion       0.38      0.33      0.36        15
+    #  ChemicalSpecies       0.20      0.14      0.16        93
+    #       Instrument       0.66      0.32      0.43        79
+    #      Measurement       0.10      0.11      0.10        46
+    #           Method       0.51      0.44      0.47       332
+    #       Morphology       0.13      0.12      0.13        32
+    # PhysicalQuantity       0.12      0.06      0.08        48
+    #          Process       0.35      0.16      0.22       141
+    #          Project       0.13      0.57      0.21        14
+    #  ResearchProblem       0.25      0.29      0.27       361
+    #   SpectralRegime       0.31      0.53      0.39        17
+    #
+    #        micro avg       0.31      0.30      0.30      1192
+    #        macro avg       0.27      0.31      0.25      1192
+    #     weighted avg       0.34      0.30      0.31      1192
+
     # Eval result with grounding, Sonnet 3.5:
     #                   precision    recall  f1-score   support
     #

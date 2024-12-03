@@ -101,25 +101,25 @@ def run_multi_agent_eval(
 
     run_eval(tagger, dataset, output_file)
 
-    # Eval result, with grounding. Haiku 3.5: - run again to confirm with no-grounding version
+    # Eval result, with grounding. Haiku 3.5. Second run, double checked:
     #               precision    recall  f1-score   support
     #
-    #       Artist       0.95      0.83      0.89       303
-    #          WoA       0.76      0.82      0.79       208
+    #       Artist       0.94      0.84      0.89       303
+    #          WoA       0.79      0.83      0.81       208
     #
-    #    micro avg       0.86      0.83      0.84       511
-    #    macro avg       0.85      0.83      0.84       511
-    # weighted avg       0.87      0.83      0.85       511
+    #    micro avg       0.87      0.83      0.85       511
+    #    macro avg       0.86      0.83      0.85       511
+    # weighted avg       0.88      0.83      0.85       511
 
-    # Eval result, without grounding. Haiku 3.5: - run again to confirm with the version above
+    # Eval result, without grounding. Haiku 3.5. Second run, double checked:
     #               precision    recall  f1-score   support
     #
-    #       Artist       0.93      0.78      0.85       303
-    #          WoA       0.83      0.77      0.80       208
+    #       Artist       0.92      0.85      0.88       303
+    #          WoA       0.62      0.79      0.70       208
     #
-    #    micro avg       0.88      0.78      0.83       511
-    #    macro avg       0.88      0.78      0.82       511
-    # weighted avg       0.89      0.78      0.83       511
+    #    micro avg       0.78      0.83      0.80       511
+    #    macro avg       0.77      0.82      0.79       511
+    # weighted avg       0.80      0.83      0.81       511
 
     # Eval result, grounding, without internet access, Haiku 3.5:
     #               precision    recall  f1-score   support
