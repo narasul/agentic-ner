@@ -140,6 +140,32 @@ def run_multi_agent_eval(
     #    macro avg       0.54      0.46      0.48      1374
     # weighted avg       0.60      0.48      0.53      1374
 
+    # Eval result with grounding engine, no internet access, Haiku 3.5:
+    #               precision    recall  f1-score   support
+    #
+    #          DNA       0.54      0.32      0.41       339
+    #          RNA       0.29      0.40      0.33        25
+    #    cell_line       0.62      0.38      0.48       125
+    #    cell_type       0.41      0.62      0.50       176
+    #      protein       0.71      0.58      0.64       709
+    #
+    #    micro avg       0.59      0.50      0.55      1374
+    #    macro avg       0.52      0.46      0.47      1374
+    # weighted avg       0.62      0.50      0.54      1374
+
+    # Eval result, with grounding engine, no researcher, Haiku 3.5:
+    #               precision    recall  f1-score   support
+    #
+    #          DNA       0.51      0.33      0.40       339
+    #          RNA       0.52      0.44      0.48        25
+    #    cell_line       0.68      0.42      0.52       125
+    #    cell_type       0.41      0.64      0.50       176
+    #      protein       0.69      0.58      0.63       709
+    #
+    #    micro avg       0.59      0.51      0.55      1374
+    #    macro avg       0.56      0.48      0.51      1374
+    # weighted avg       0.61      0.51      0.54      1374
+
     # Eval result Sonnet 3.5 V2 and grounding:
 
     #               precision    recall  f1-score   support
@@ -160,5 +186,6 @@ if __name__ == "__main__":
     # run_multi_agent_eval()
     # run_multi_agent_eval(enable_grounding=True)
     # run_few_shot_eval(sonnet=True)
-
-    run_multi_agent_eval(enable_grounding=True, sonnet=True)
+    # run_multi_agent_eval(enable_grounding=True, sonnet=True)
+    # run_multi_agent_eval(enable_grounding=True, internet_access=False)
+    run_multi_agent_eval(enable_grounding=True, researcher=False)

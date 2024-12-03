@@ -64,6 +64,7 @@ class BaseGroupChatAgent(RoutedAgent):
         #         source="system",
         #     )
         # )
+        print(f"Taking into account last message:\n {self._chat_history[-1].content}")
         completion = await self._model_client.create(
             [self._system_message] + self._chat_history,
             extra_create_args={"temperature": 0},

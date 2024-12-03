@@ -1,3 +1,7 @@
+from ner.ablation.prompts import (
+    get_agent_config_no_internet,
+    get_agent_config_no_researcher,
+)
 from ner.agents.multi_agent_tagger import MultiAgentTagger
 from ner.clients.claude_client import AnthropicClient, ClaudeFamily
 from ner.clients.claude_oai_compatible_client import create_chat_completions_client
@@ -47,25 +51,54 @@ def run_few_shot_eval():
     #               weighted avg       0.52      0.66      0.57      1001
 
 
-def run_multi_agent_eval(enable_grounding: bool = False):
+def run_multi_agent_eval(
+    enable_grounding: bool = False,
+    sonnet: bool = False,
+    internet_access: bool = True,
+    researcher: bool = True,
+):
     print("Running multi-agent NER eval")
     dataset = NERDataset.from_buster("FOLD_2").sample(500)
     dev_dataset = NERDataset.from_buster("FOLD_1")
     ontology = get_buster_ontology()
     domain = "Finance, Law, Business"
     output_file = "buster_multi_agent_eval"
-    examples = dev_dataset.get_examples(3)
 
-    agent_config = get_agent_config(domain, ontology, examples)
+    if not researcher:
+        agent_config = get_agent_config_no_researcher(
+            domain, ontology, dev_dataset.get_examples(3)
+        )
+    elif internet_access:
+        agent_config = get_agent_config(domain, ontology, dev_dataset.get_examples(3))
+    else:
+        agent_config = get_agent_config_no_internet(
+            domain, ontology, dev_dataset.get_examples(3)
+        )
 
-    llm_client = create_chat_completions_client(ClaudeFamily.HAIKU_35.value)
+    if sonnet:
+        llm_client = create_chat_completions_client(ClaudeFamily.SONNET_35_V2.value)
+    else:
+        llm_client = create_chat_completions_client(ClaudeFamily.HAIKU_35.value)
+
     if enable_grounding:
         grounding_engine = GroundingEngine.from_ner_dataset(dev_dataset)
         tagger = MultiAgentTagger(
-            dataset.entity_types, agent_config, llm_client, grounding_engine
+            dataset.entity_types,
+            agent_config,
+            llm_client,
+            grounding_engine,
+            internet_access,
+            researcher,
         )
     else:
-        tagger = MultiAgentTagger(dataset.entity_types, agent_config, llm_client)
+        tagger = MultiAgentTagger(
+            dataset.entity_types,
+            agent_config,
+            llm_client,
+            None,
+            internet_access,
+            researcher,
+        )
 
     run_eval(tagger, dataset, output_file)
 
@@ -97,8 +130,38 @@ def run_multi_agent_eval(enable_grounding: bool = False):
     #                      macro avg       0.52      0.64      0.56      1001
     #                   weighted avg       0.54      0.64      0.58      1001
 
+    #     Eval result with grounding engine, no internet access, Haiku 3.5:
+    #                                 precision    recall  f1-score   support
+    #
+    #               ACQUIRED_COMPANY       0.58      0.68      0.62       322
+    #                ANNUAL_REVENUES       0.11      0.33      0.17        48
+    #                 BUYING_COMPANY       0.63      0.76      0.69       425
+    #     GENERIC_CONSULTING_COMPANY       0.66      0.56      0.60        68
+    #       LEGAL_CONSULTING_COMPANY       0.74      0.89      0.81        28
+    #                SELLING_COMPANY       0.38      0.62      0.47       110
+    #
+    #                      micro avg       0.53      0.69      0.60      1001
+    #                      macro avg       0.51      0.64      0.56      1001
+    #                   weighted avg       0.57      0.69      0.62      1001
+
+    # Eval result with grounding engine, no researcher, Haiku 3.5:
+    #                             precision    recall  f1-score   support
+    #
+    #           ACQUIRED_COMPANY       0.56      0.68      0.62       322
+    #            ANNUAL_REVENUES       0.13      0.42      0.20        48
+    #             BUYING_COMPANY       0.62      0.76      0.69       425
+    # GENERIC_CONSULTING_COMPANY       0.63      0.54      0.58        68
+    #   LEGAL_CONSULTING_COMPANY       0.74      0.89      0.81        28
+    #            SELLING_COMPANY       0.37      0.61      0.46       110
+    #
+    #                  micro avg       0.52      0.69      0.59      1001
+    #                  macro avg       0.51      0.65      0.56      1001
+    #               weighted avg       0.56      0.69      0.61      1001
+
 
 if __name__ == "__main__":
     # run_few_shot_eval()
-    run_multi_agent_eval()
+    # run_multi_agent_eval()
     # run_multi_agent_eval(enable_grounding=True)
+    # run_multi_agent_eval(enable_grounding=True, internet_access=False)
+    run_multi_agent_eval(enable_grounding=True, researcher=False)
