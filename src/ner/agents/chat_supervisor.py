@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import deepcopy
 from typing import List, Any, Dict, Optional
 
 from autogen_core.base import MessageContext
@@ -112,6 +112,7 @@ class ChatSupervisor(RoutedAgent):
         grounding_feedback = self._grounding_engine.verify(tokens, iob2_labels).get_text_feedback()  # type: ignore
         print(f"Providing grounding feedback to agent: {grounding_feedback}")
         if grounding_feedback.strip():
+            print(f"Requesting tagger to speak after grounding")
             self._chat_history.append(
                 UserMessage(
                     source="User",
@@ -119,6 +120,10 @@ class ChatSupervisor(RoutedAgent):
                 )
             )
             self._previous_participant_topic_type = TAGGER_TOPIC_TYPE
+            await self.publish_message(
+                GroupChatMessage(body=self._chat_history[-1]),
+                DefaultTopicId(type=TAGGER_TOPIC_TYPE),
+            )
             await self.publish_message(
                 RequestToSpeak(), DefaultTopicId(type=TAGGER_TOPIC_TYPE)
             )
@@ -164,6 +169,10 @@ class ChatSupervisor(RoutedAgent):
                     source="User",
                     content="You should put your final output inside <output> tags!",
                 )
+            )
+            await self.publish_message(
+                GroupChatMessage(body=self._chat_history[-1]),
+                DefaultTopicId(type=TAGGER_TOPIC_TYPE),
             )
 
         if self._output_grounded:

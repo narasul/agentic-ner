@@ -1,6 +1,7 @@
 import asyncio
-from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from copy import copy, deepcopy
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple, Any, Dict
 import uuid
 
 from autogen_core.base import TopicId
@@ -8,6 +9,7 @@ from autogen_core.components.models import ChatCompletionClient, UserMessage
 
 from autogen_core.application import SingleThreadedAgentRuntime
 from autogen_core.components import TypeSubscription
+import nltk
 
 from ner.agents.base_agent import GroupChatMessage
 from ner.agents.tagger_agent import TAGGER_TOPIC_TYPE, TaggerAgent
@@ -17,6 +19,7 @@ from ner.agents.chat_supervisor import ChatSupervisor
 from ner.agents.agent_config import AgentConfig
 from ner.converter import Converter
 from ner.grounding import GroundingEngine
+from ner.helper import extract_tag
 from ner.tagger import Tagger
 
 
@@ -27,6 +30,7 @@ class MultiAgentTagger(Tagger):
     grounding_engine: Optional[GroundingEngine] = None
     internet_access: bool = True
     researcher: bool = True
+    metadata: Dict[str, Any] = field(default_factory=dict)
     group_chat_topic_type = "GroupChat"
 
     async def initialize_agents(self) -> SingleThreadedAgentRuntime:
@@ -138,7 +142,7 @@ class MultiAgentTagger(Tagger):
         self, tokens: List[str], left_context: str = "", right_context: str = ""
     ):
         await self.initialize_agents()
-
+        self.metadata["distances"] = self.metadata.get("distances", [[], []])
         query_template = "{}\n\n<text_to_tag>{}</text_to_tag>\n\n{}\n\nOnly tag this text: <text_to_tag>{}</text_to_tag>"
         query = query_template.format(
             left_context, " ".join(tokens), right_context, " ".join(tokens)
@@ -166,10 +170,29 @@ class MultiAgentTagger(Tagger):
         )
         await self.runtime.stop_when_idle()
 
+        tokens_copy = deepcopy(tokens)
         tagged_string, genia_labels = MultiAgentTagger.convert_to_genia_labels(
             self.metadata.get("last_tagger_output", ""), tokens, self.entity_types  # type: ignore
         )
         print(f"Predicted entities: {genia_labels}")
+        raw_tagged_string = (
+            extract_tag(self.metadata.get("last_tagger_output", ""), "output")
+            .replace("\\n", "")
+            .strip()
+        )
+
+        llm_output_without_tags = Tagger._remove_all_tags(
+            raw_tagged_string, self.entity_types
+        )
+        input_sentence = " ".join(tokens_copy)
+        print(f"Tagged string without tags: {llm_output_without_tags}")
+        print(f"Input string: {input_sentence}")
+
+        distance = nltk.edit_distance(input_sentence, llm_output_without_tags)
+        print(f"Edit distance: {distance}")
+        print(f"Length diff: {len(input_sentence) - len(llm_output_without_tags)}")
+        self.metadata["distances"][0].append(len(input_sentence))
+        self.metadata["distances"][1].append(distance)
 
         return tagged_string, Converter.convert_genia_to_iob2(genia_labels, tokens)
 

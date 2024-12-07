@@ -53,6 +53,16 @@ def run_few_shot_eval(sonnet: bool = False):
     #    macro avg       0.82      0.85      0.83       511
     # weighted avg       0.83      0.86      0.84       511
 
+    # Eval result, Sonnet 3.5:
+    #               precision    recall  f1-score   support
+    #
+    #       Artist       0.93      0.79      0.86       303
+    #          WoA       0.92      0.80      0.85       208
+    #
+    #    micro avg       0.93      0.79      0.86       511
+    #    macro avg       0.93      0.80      0.86       511
+    # weighted avg       0.93      0.79      0.86       511
+
 
 def run_multi_agent_eval(
     enable_grounding: bool = False,
@@ -141,11 +151,23 @@ def run_multi_agent_eval(
     #    macro avg       0.84      0.81      0.82       511
     # weighted avg       0.86      0.82      0.83       511
 
+    # Eval result, grounding, Sonnet 3.5:
+    #               precision    recall  f1-score   support
+    #
+    #       Artist       0.92      0.81      0.86       303
+    #          WoA       0.87      0.85      0.86       208
+    #
+    #    micro avg       0.90      0.83      0.86       511
+    #    macro avg       0.90      0.83      0.86       511
+    # weighted avg       0.90      0.83      0.86       511
+
 
 if __name__ == "__main__":
     # run_few_shot_eval()
     # run_multi_agent_eval()  # no grounding
-    # run_multi_agent_eval(enable_grounding=True)  # - running now
-    run_multi_agent_eval(enable_grounding=False)  # - Also, running now
+    # run_multi_agent_eval(enable_grounding=True)
+    # run_multi_agent_eval(enable_grounding=False)
     # run_multi_agent_eval(enable_grounding=True, internet_access=False)
     # run_multi_agent_eval(enable_grounding=True, researcher=False)
+    # run_few_shot_eval(sonnet=True)
+    run_multi_agent_eval(enable_grounding=True, sonnet=True)

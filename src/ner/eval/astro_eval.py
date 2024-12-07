@@ -240,6 +240,6 @@ if __name__ == "__main__":
     # run_few_shot_eval(sonnet=True)
     # run_multi_agent_eval(enable_grounding=True, sonnet=True)
 
-    # run_multi_agent_eval(enable_grounding=False) - running currently
+    # run_multi_agent_eval(enable_grounding=False)
     # run_multi_agent_eval(enable_grounding=True, internet_access=False)
     run_multi_agent_eval(enable_grounding=True, researcher=False)

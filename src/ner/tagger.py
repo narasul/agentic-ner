@@ -58,14 +58,14 @@ class Tagger(ABC):
         return tagged_string_to_return, entities
 
     @staticmethod
-    def _remove_tag(llm_output: str, tag: str) -> str:
-        return llm_output.replace(f"<{tag}>", "", 1).replace(f"</{tag}>", "", 1)
+    def _remove_tag(llm_output: str, tag: str, count: int = 1) -> str:
+        return llm_output.replace(f"<{tag}>", "", count).replace(f"</{tag}>", "", count)
 
     @staticmethod
     def _remove_all_tags(text: str, entity_types: List[str]) -> str:
         tagless = text
         for entity_type in entity_types:
-            tagless = Tagger._remove_tag(tagless, entity_type)
+            tagless = Tagger._remove_tag(tagless, entity_type, -1)
 
         return tagless
 
