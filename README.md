@@ -1,20 +1,19 @@
-# ner
+# AgenticNER
 
-**Documentation**: [https://narasul.github.io/thesis](https://narasul.github.io/thesis)
-
-**Source Code**: [https://github.com/narasul/thesis](https://github.com/narasul/thesis)
+This repository hosts source code for my master's thesis 'Collaborative Multi-Agent Architecture for Domain-Agnostic Named Entity Recognition'. Instructions to run the benchmarks and reproduce the results from thesis can be found below.
 
 ---
 
-Rasul's master's thesis
+## Installation
 
-
-## Development
-
-* Clone this repository
 * Requirements:
-  * [Poetry](https://python-poetry.org/)
-  * Python 3.8+
+  * Python 3.12+
+
+* Install Poetry:
+  ```sh
+  curl -sSL https://install.python-poetry.org | python3 -
+  ```
+
 * Create a virtual environment and install the dependencies
 
 ```sh
@@ -27,46 +26,121 @@ poetry install
 poetry shell
 ```
 
-### Testing
+## Running Benchmarks
 
-```sh
-pytest
+The repo includes a command-line interface to run various benchmarks and evaluate different variants of AgenticNER.
+
+### Prerequisites
+
+* Get API key from [Anthropic](https://console.anthropic.com/) and export the API key
+
+```bash
+export ANTHROPIC_API_KEY="<your api key>"
 ```
 
-### Documentation
+* Get API key from [tavily.com](https://tavily.com/) to enable internet access for research agent and export the API key
 
-The documentation is automatically generated from the content of the [docs directory](https://github.com/narasul/ner/tree/master/docs) and from the docstrings
- of the public signatures of the source code. The documentation is updated and published as a [Github Pages page](https://pages.github.com/) automatically as part each release.
-
-### Releasing
-
-Trigger the [Draft release workflow](https://github.com/narasul/ner/actions/workflows/draft_release.yml)
-(press _Run workflow_). This will update the changelog & version and create a GitHub release which is in _Draft_ state.
-
-Find the draft release from the
-[GitHub releases](https://github.com/narasul/ner/releases) and publish it. When
- a release is published, it'll trigger [release](https://github.com/narasul/ner/blob/master/.github/workflows/release.yml) workflow which creates PyPI
- release and deploys updated documentation.
-
-### Pre-commit
-
-Pre-commit hooks run all the auto-formatting (`ruff format`), linters (e.g. `ruff` and `mypy`), and other quality
- checks to make sure the changeset is in good shape before a commit/push happens.
-
-You can install the hooks with (runs for each commit):
-
-```sh
-pre-commit install
+```bash
+export TAVILY_API_KEY="<your api key>"
 ```
 
-Or if you want them to run only for each push:
+* Set Anthropic API key in `config.yaml` to start LiteLLM proxy to create OpenAI compatible interface for Anthropic models. This is required by `AutoGen`.
 
-```sh
-pre-commit install -t pre-push
+* Start LiteLLM proxy in separate command line session
+
+```bash
+poetry run litellm --config config.yaml
 ```
 
-Or if you want e.g. want to run all checks manually for all files:
+* Export LiteLLM server address as OpenAI base URL
 
-```sh
-pre-commit run --all-files
+```bash
+export OPENAI_BASE_URL=http://0.0.0.0:4000
 ```
+
+### Command Structure
+
+```bash
+poetry run python src/ner/eval/run.py --benchmark <benchmark> --variant <variant> [--llm <llm>] [--sample-size <size>]
+```
+
+### Parameters
+
+- `--benchmark`: Choose the benchmark dataset 
+  - Options: `genia`, `music`, `buster`, `astro`
+- `--variant`: Choose the evaluation variant
+  - `few-shot`: Basic few-shot learning approach
+  - `agentic-ner-no-grounding`: AgenticNER without grounding
+  - `agentic-ner-grounding`: AgenticNER with grounding enabled
+  - `agentic-ner-grounding-no-internet`: AgenticNER with grounding but no internet access
+  - `agentic-ner-grounding-no-researcher`: AgenticNER with grounding but no researcher agent
+- `--llm`: Choose the LLM model (default: haiku)
+  - Options: `haiku`, `sonnet`
+- `--sample-size`: Number of samples to evaluate (default: 500)
+
+### Example Commands
+
+```bash
+# Run few-shot evaluation on GENIA using Haiku
+poetry run python src/ner/eval/run.py --benchmark genia --variant few-shot
+
+# Run full AgenticNER on MusicNER using Sonnet
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding --llm sonnet
+
+# Run AgenticNER without internet on Buster with 100 samples
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding-no-internet --sample-size 100
+```
+
+### Reproducing results in the paper
+
+To reproduce the results the thesis, run the following commands for each benchmark:
+
+#### GENIA Benchmark
+```bash
+# Baseline (Few-shot single LLM call with Haiku)
+poetry run python src/ner/eval/run.py --benchmark genia --variant few-shot
+
+# Baseline (Few-shot single LLM call with Sonnet)
+poetry run python src/ner/eval/run.py --benchmark genia --variant few-shot --llm sonnet
+
+# AgenticNER variants
+poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-no-grounding
+poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-grounding
+poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-grounding-no-internet
+poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-grounding-no-researcher
+poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-grounding --llm sonnet
+```
+
+#### MusicNER Benchmark
+```bash
+poetry run python src/ner/eval/run.py --benchmark music --variant few-shot
+poetry run python src/ner/eval/run.py --benchmark music --variant few-shot --llm sonnet
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-no-grounding
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding-no-internet
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding-no-researcher
+poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding --llm sonnet
+```
+
+#### Buster Benchmark
+```bash
+poetry run python src/ner/eval/run.py --benchmark buster --variant few-shot
+poetry run python src/ner/eval/run.py --benchmark buster --variant few-shot --llm sonnet
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-no-grounding
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding-no-internet
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding-no-researcher
+poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding --llm sonnet
+```
+
+#### AstroNER Benchmark
+```bash
+poetry run python src/ner/eval/run.py --benchmark astro --variant few-shot
+poetry run python src/ner/eval/run.py --benchmark astro --variant few-shot --llm sonnet
+poetry run python src/ner/eval/run.py --benchmark astro --variant agentic-ner-no-grounding
+poetry run python src/ner/eval/run.py --benchmark astro --variant agentic-ner-grounding
+poetry run python src/ner/eval/run.py --benchmark astro --variant agentic-ner-grounding-no-internet
+poetry run python src/ner/eval/run.py --benchmark astro --variant agentic-ner-grounding-no-researcher
+poetry run python src/ner/eval/run.py --benchmark astro --variant agentic-ner-grounding --llm sonnet
+```
+

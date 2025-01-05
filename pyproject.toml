@@ -48,6 +48,8 @@ rich = "*"
 nltk = "*"
 langchain_community = "*"
 tavily-python = "*"
+matplotlib = "*"
+seaborn = "*"
 
 [tool.poetry.group.dev.dependencies]
 mkdocstrings = {version = ">=0.23", extras = ["python"]}

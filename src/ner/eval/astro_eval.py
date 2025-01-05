@@ -236,10 +236,10 @@ def run_multi_agent_eval(
 if __name__ == "__main__":
     # run_few_shot_eval()
     # run_multi_agent_eval()
-    # run_multi_agent_eval(enable_grounding=True)
+    run_multi_agent_eval(enable_grounding=True)
     # run_few_shot_eval(sonnet=True)
     # run_multi_agent_eval(enable_grounding=True, sonnet=True)
 
     # run_multi_agent_eval(enable_grounding=False)
     # run_multi_agent_eval(enable_grounding=True, internet_access=False)
-    run_multi_agent_eval(enable_grounding=True, researcher=False)
+    # run_multi_agent_eval(enable_grounding=True, researcher=False)

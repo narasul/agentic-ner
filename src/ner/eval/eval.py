@@ -1,9 +1,11 @@
 import json
 from time import sleep
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
+import numpy as np
+from seqeval.metrics.v1 import precision_recall_fscore_support
 from tqdm import tqdm
-from seqeval.metrics import classification_report
+from seqeval.metrics import classification_report, f1_score
 from seqeval.scheme import IOB2
 
 from ner.eval.dataset import NERDataset
@@ -35,6 +37,7 @@ def run_eval(
     tagger: Tagger,
     dataset: NERDataset,
     output_file: str,
+    return_scores=False,
 ):
     print(f"Test dataset size: {len(dataset.references)}")
 
@@ -50,3 +53,25 @@ def run_eval(
 
     with open(f"pred/{output_file}-{datetime.now().isoformat()}.json", "w") as file:
         file.write(json.dumps(predictions))
+
+    if return_scores:
+        return precision_recall_fscore_support(
+            dataset.references[: len(predictions)],
+            predictions,
+            scheme=IOB2,
+            average="micro",
+        )
+
+
+def calculate_std_dev(scores: List[Tuple[float, float, float, float]]):
+    precision_scores = np.array([score[0] for score in scores])
+    recall_scores = np.array([score[1] for score in scores])
+    f1_scores = np.array([score[2] for score in scores])
+
+    p_dev = np.std(precision_scores, ddof=1)
+    r_dev = np.std(recall_scores, ddof=1)
+    f1_dev = np.std(f1_scores, ddof=1)
+
+    print(f"Standard deviation for precision: {p_dev}")
+    print(f"Standard deviation for recall: {r_dev}")
+    print(f"Standard deviation for f1 score: {f1_dev}")

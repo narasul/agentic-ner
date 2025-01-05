@@ -1,0 +1,18 @@
+model_list:
+  - model_name: claude-3-5-haiku-20241022
+    litellm_params:
+        model: claude-3-5-haiku-20241022
+        api_key: "<your anthropic API key here>"
+  - model_name: claude-3-haiku-20240307
+    litellm_params:
+        model: claude-3-haiku-20240307
+        api_key: "<your anthropic API key here>"
+  - model_name: claude-3-5-sonnet-20241022
+    litellm_params:
+        model: claude-3-5-sonnet-20241022
+        api_key: "<your anthropic API key here>"
+
+litellm_settings:
+  num_retries: 4 # retry call 3 times on each model_name
+  request_timeout: 15 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout 
+  fallbacks: [{"claude-3-5-haiku-20241022": ["claude-3-haiku-20240307"]}] # fallback to old Haiku

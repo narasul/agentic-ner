@@ -1,3 +1,4 @@
+from typing import Any
 from ner.ablation.prompts import (
     get_agent_config_no_internet,
     get_agent_config_no_researcher,
@@ -8,14 +9,14 @@ from ner.clients.claude_oai_compatible_client import create_chat_completions_cli
 from ner.grounding import GroundingEngine
 from ner.ontology import get_genia_ontology
 from ner.eval.dataset import NERDataset
-from ner.eval.eval import run_eval
+from ner.eval.eval import calculate_std_dev, run_eval
 from ner.prompts import get_agent_config, get_ner_prompt
 from ner.tagger_few_shot import FewShotTagger
 
 
-def run_few_shot_eval(sonnet: bool = False):
+def run_few_shot_eval(sonnet: bool = False, sample_size=500) -> Any:
     print("Running few shot NER eval")
-    dataset = NERDataset.from_genia("test").sample(500)
+    dataset = NERDataset.from_genia("test").sample(sample_size)
     dev_dataset = NERDataset.from_genia("train")
     ontology = get_genia_ontology()
     domain = "Biomedical, molecular biology, genomics"
@@ -37,7 +38,7 @@ def run_few_shot_eval(sonnet: bool = False):
         system_prompt=system_prompt,
     )
 
-    run_eval(tagger, dataset, output_file)
+    return run_eval(tagger, dataset, output_file, return_scores=True)
 
     # Eval result, Haiku 3.5:
     #               precision    recall  f1-score   support
@@ -71,9 +72,10 @@ def run_multi_agent_eval(
     sonnet: bool = False,
     internet_access: bool = True,
     researcher: bool = True,
+    sample_size=500,
 ):
     print("Running multi-agent NER eval")
-    dataset = NERDataset.from_genia("test").sample(500)
+    dataset = NERDataset.from_genia("test").sample(sample_size)
     dev_dataset = NERDataset.from_genia("train")
     examples = dev_dataset.get_examples(3)
     ontology = get_genia_ontology()
@@ -182,10 +184,21 @@ def run_multi_agent_eval(
 
 
 if __name__ == "__main__":
-    # run_few_shot_eval()
+    # scores = []
+    # for i in range(25):
+    #     scores.append(run_few_shot_eval(sonnet=True, sample_size=50))
+    #
+    # calculate_std_dev(scores)
+    #
+    # From calculation above:
+    #
+    # Standard deviation for precision: 0.015161244273972566
+    # Standard deviation for recall: 0.036870385800625995
+    # Standard deviation for f1 score: 0.025533967147723834
+
     # run_multi_agent_eval()
-    # run_multi_agent_eval(enable_grounding=True)
+    run_multi_agent_eval(enable_grounding=True, sonnet=True, sample_size=50)
     # run_few_shot_eval(sonnet=True)
     # run_multi_agent_eval(enable_grounding=True, sonnet=True)
     # run_multi_agent_eval(enable_grounding=True, internet_access=False)
-    run_multi_agent_eval(enable_grounding=True, researcher=False)
+    # run_multi_agent_eval(enable_grounding=True, researcher=False)

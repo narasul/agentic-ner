@@ -12,14 +12,14 @@ from ner.clients.claude_oai_compatible_client import create_chat_completions_cli
 from ner.grounding import GroundingEngine
 from ner.ontology import get_buster_ontology
 from ner.eval.dataset import NERDataset
-from ner.eval.eval import run_eval
+from ner.eval.eval import calculate_std_dev, run_eval
 from ner.prompts import get_agent_config, get_ner_prompt
 from ner.tagger_few_shot import FewShotTagger
 
 
-def run_few_shot_eval(sonnet: bool = False):
+def run_few_shot_eval(sonnet: bool = False, sample_size=500):
     print("Running few shot NER eval")
-    dataset = NERDataset.from_buster("FOLD_2").sample(500)
+    dataset = NERDataset.from_buster("FOLD_2").sample(sample_size)
     dev_dataset = NERDataset.from_buster("FOLD_1")
     ontology = get_buster_ontology()
     domain = "Finance, Law, Business"
