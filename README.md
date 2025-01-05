@@ -84,16 +84,16 @@ poetry run python src/ner/eval/run.py --benchmark <benchmark> --variant <variant
 # Run few-shot evaluation on GENIA using Haiku
 poetry run python src/ner/eval/run.py --benchmark genia --variant few-shot
 
-# Run full AgenticNER on MusicNER using Sonnet
+# Run full AgenticNER on MusicRecoNER using Sonnet
 poetry run python src/ner/eval/run.py --benchmark music --variant agentic-ner-grounding --llm sonnet
 
 # Run AgenticNER without internet on Buster with 100 samples
 poetry run python src/ner/eval/run.py --benchmark buster --variant agentic-ner-grounding-no-internet --sample-size 100
 ```
 
-### Reproducing results in the paper
+### Reproducing results from the thesis
 
-To reproduce the results the thesis, run the following commands for each benchmark:
+To reproduce the results from the thesis, run the following commands for each benchmark:
 
 #### GENIA Benchmark
 ```bash
@@ -111,7 +111,7 @@ poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-gr
 poetry run python src/ner/eval/run.py --benchmark genia --variant agentic-ner-grounding --llm sonnet
 ```
 
-#### MusicNER Benchmark
+#### MusicRecoNER Benchmark
 ```bash
 poetry run python src/ner/eval/run.py --benchmark music --variant few-shot
 poetry run python src/ner/eval/run.py --benchmark music --variant few-shot --llm sonnet
