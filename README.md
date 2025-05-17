@@ -1,6 +1,6 @@
 # AgenticNER
 
-This repository hosts source code for my master's thesis 'Collaborative Multi-Agent Architecture for Domain-Agnostic Named Entity Recognition'. Instructions to run the benchmarks and reproduce the results from thesis can be found below.
+This repository hosts source code for my master's thesis ['Collaborative Multi-Agent Architecture for Domain-Agnostic Named Entity Recognition'](https://dspace.ut.ee/items/434e6981-09fe-4e1e-a65a-6b02173f4ad7). Instructions to run the benchmarks and reproduce the results from thesis can be found below.
 
 ---
 
